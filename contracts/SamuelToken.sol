@@ -7,7 +7,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract PastelToken is ERC20, Ownable {
   uint constant _initial_supply = 100*10**18;
   
-  constructor() ERC20("Pastel", "Pastel") {}
+  constructor() ERC20("Pastel", "PASTEL") {
+    _mint(msg.sender, _initial_supply);
+  }
 
   function issueToken(address to, uint256 amount) public onlyOwner {
     _mint(to, amount*10**18);
