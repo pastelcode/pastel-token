@@ -5,7 +5,7 @@ const main = async () => {
   console.log(`Deploying contracts with the account: ${deployer.address}`)
 
   const PastelToken = await ethers.getContractFactory('PastelToken')
-  const pastelToken = await PastelToken.deploy(1)
+  const pastelToken = await PastelToken.deploy(1000)
   const Vendor = await ethers.getContractFactory('Vendor')
   const vendor = await Vendor.deploy(pastelToken.address)
   console.log(`Token address: ${pastelToken.address}`)
