@@ -6,7 +6,10 @@ const main = async () => {
 
   const PastelToken = await ethers.getContractFactory('PastelToken')
   const pastelToken = await PastelToken.deploy(1)
+  const Vendor = await ethers.getContractFactory('Vendor')
+  const vendor = await Vendor.deploy(pastelToken.address)
   console.log(`Token address: ${pastelToken.address}`)
+  console.log(`Vendor contract address: ${vendor.address}`)
 }
 
 // We recommend this pattern to be able to use async/await everywhere
