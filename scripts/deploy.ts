@@ -6,7 +6,7 @@ const main = async () => {
   console.log(`Account balance: ${(await deployer.getBalance()).toString()}`)
 
   const PastelToken = await ethers.getContractFactory('PastelToken')
-  const pastelToken = await PastelToken.deploy()
+  const pastelToken = await PastelToken.deploy(1000)
   console.log(`Token address: ${pastelToken.address}`)
 }
 
