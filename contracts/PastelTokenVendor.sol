@@ -10,16 +10,16 @@ contract Vendor is Ownable {
     }
 
     PastelToken token;
-    uint256 public tokensPerMatic = 100;
+    uint256 public tokensPerEther = 100;
     event BuyTokens(
         address buyer,
-        uint256 amountOfMatic,
+        uint256 amountOfEthers,
         uint256 amountOfTokens
     );
 
     function buyTokens() public payable returns (uint256 tokenAmount) {
-        require(msg.value > 0, "You need to send some MATIC to proceed");
-        uint256 amountToBuy = msg.value * tokensPerMatic;
+        require(msg.value > 0, "You need to send some ETHER to proceed");
+        uint256 amountToBuy = msg.value * tokensPerEther;
 
         uint256 vendorBalance = token.balanceOf(address(this));
         require(vendorBalance >= amountToBuy, "Vendor has insufficient tokens");
@@ -43,10 +43,10 @@ contract Vendor is Ownable {
             "You have insufficient tokens"
         );
 
-        uint256 amountOfMaticToTransfer = tokenAmountToSell / tokensPerMatic;
-        uint256 ownerMaticBalance = address(this).balance;
+        uint256 amountOfEtherToTransfer = tokenAmountToSell / tokensPerEther;
+        uint256 ownerEtherBalance = address(this).balance;
         require(
-            ownerMaticBalance >= amountOfMaticToTransfer,
+            ownerEtherBalance >= amountOfEtherToTransfer,
             "Vendor has insufficient funds"
         );
         bool sent = token.transferFrom(
@@ -59,7 +59,7 @@ contract Vendor is Ownable {
 
     function withdraw() public onlyOwner {
         uint256 ownerBalance = address(this).balance;
-        require(ownerBalance > 0, "No MATIC present in vendor");
+        require(ownerBalance > 0, "No ETHER present in vendor");
         (bool sent, ) = msg.sender.call{value: address(this).balance}("");
         require(sent, "Failed to withdraw");
     }
