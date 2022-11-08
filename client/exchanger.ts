@@ -1,42 +1,53 @@
 import tokenABI from '../artifacts/contracts/PastelToken.sol/PastelToken.json' assert { type: 'json' }
 import vendorABI from '../artifacts/contracts/PastelTokenVendor.sol/Vendor.json' assert { type: 'json' }
-import { AbiItem, cmd, conversion, Web3 } from './deps.ts'
+import { AbiItem, cmd, Web3 } from './deps.ts'
 
-const program = new cmd.Command('exchanger')
-program.version('0.1.0')
+console.log('Initializing...')
 
-conversion.writeAll(
-  Deno.stdout,
-  new TextEncoder().encode('Initializing provider... ')
-)
 const providerUrl =
   Deno.env.get('ALCHEMY_PROJECT_URL') || 'http://127.0.0.1:8545/'
 const web3 = new Web3(new Web3.providers.HttpProvider(providerUrl!))
-console.log('Done!\n')
 
-const buy = async (pastelString: string) => {
-  const pastel = Number(pastelString)
-  if (isNaN(pastel)) {
+const vendorContractAddress = Deno.env.get('VENDOR_CONTRACT_ADDRESS')
+
+const tokenContractAddress = Deno.env.get('TOKEN_CONTRACT_ADDRESS')
+
+const vendorContract = new web3.eth.Contract(
+  vendorABI.abi as AbiItem[],
+  vendorContractAddress
+)
+
+const tokenContract = new web3.eth.Contract(
+  tokenABI.abi as AbiItem[],
+  tokenContractAddress
+)
+
+const tokensPerEther = 100
+
+const accounts = await web3.eth.getAccounts()
+
+console.log('Done!')
+
+const buy = async (amountToBuy: string) => {
+  const amountToBuyInPastel = Number(amountToBuy)
+  if (isNaN(amountToBuyInPastel)) {
     console.error('ERROR: The PASTEL quantity must be a number')
     return
   }
-  const ether = pastel / 100
-  console.log(`${pastel} PASTEL = ${ether} ETHER`)
+
+  const amountToBuyInEther = amountToBuyInPastel / tokensPerEther
+  console.log(`${amountToBuyInPastel} PASTEL = ${amountToBuyInEther} ETHER`)
 
   try {
-    const accounts = await web3.eth.getAccounts()
-    const vendor = new web3.eth.Contract(
-      vendorABI.abi as AbiItem[],
-      Deno.env.get('VENDOR_CONTRACT_ADDRESS')
-    )
+    const amountToBuyInWei = web3.utils.toWei(`${amountToBuyInEther}`, 'ether')
 
-    const request = await vendor.methods.buyTokens().send({
-      from: accounts[0],
-      value: web3.utils.toWei(`${ether}`, 'ether'),
+    // Trigger the buying of tokens
+    await vendorContract.methods.buyTokens().send({
+      from: accounts[1],
+      value: amountToBuyInWei,
     })
-    console.log('You have successfully bought PASTEL tokens')
-    console.log(`Request:`)
-    console.log(request)
+
+    console.log(`You have successfully bought ${amountToBuyInPastel} PASTEL`)
   } catch (exception) {
     console.error(`Error buying PASTEL: ${exception}`)
   }
@@ -50,33 +61,27 @@ const sell = async (pastelString: string) => {
   }
 
   try {
-    const accounts = await web3.eth.getAccounts()
-    const tokenContract = new web3.eth.Contract(
-      tokenABI.abi as AbiItem[],
-      Deno.env.get('TOKEN_CONTRACT_ADDRESS')
-    )
-    // Approve the contract to spend the tokens
-    let request = await tokenContract.methods
-      .approve(
-        Deno.env.get('VENDOR_CONTRACT_ADDRESS'),
-        web3.utils.toWei(`${pastel}`, 'ether')
-      )
-      .send({ from: accounts[0] })
+    const amountToSellInWei = web3.utils.toWei(`${pastel}`, 'ether')
+
+    // Approve the vendor address as spender
+    // and how many of your tokens it is allowed to spend
+    await tokenContract.methods
+      .approve(vendorContractAddress, amountToSellInWei)
+      .send({ from: accounts[1] })
+
     // Trigger the selling of tokens
-    const vendor = new web3.eth.Contract(
-      vendorABI.abi as AbiItem[],
-      Deno.env.get('VENDOR_CONTRACT_ADDRESS')
-    )
-    request = await vendor.methods
-      .sellTokens(web3.utils.toWei(`${pastel}`, 'ether'))
-      .send({ from: accounts[0] })
-    console.log('You have successfully sold PASTEL tokens')
-    console.log(`Request:`)
-    console.log(request)
+    await vendorContract.methods
+      .sellTokens(amountToSellInWei)
+      .send({ from: accounts[1] })
+
+    console.log(`You have successfully sold ${pastel} PASTEL`)
   } catch (exception) {
     console.error(`Error buying PASTEL: ${exception}`)
   }
 }
+
+const program = new cmd.Command('exchanger')
+program.version('0.1.0')
 
 program
   .command('buy <pastel>')
