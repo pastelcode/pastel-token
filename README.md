@@ -1,13 +1,23 @@
-# Sample Hardhat Project
+# Pastel token (PASTEL)
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+This projects creates a platform to buy and sell PASTEL using an Ethereum Smart Contract written in Solidity.
 
-Try running some of the following tasks:
+PASTEL is a simple ERC20 token written in Solidity as well.
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
-```
+## Try it out!
+
+The project is developed using Hardhat as the framework for Ethereum development (https://hardhat.org/).
+
+You must have Deno installed to run the client (https://deno.land/#installation).
+
+1. `yarn` (to install all dependencies)
+2. In other terminal window/tab `npx hardhat node` to start a JSON-RCP server with a test blockchain
+3. Go back to the first terminal
+4. `npx hardhat run --network localhost scripts/deploy.ts` (to deploy the token and the vendor smart contract)
+5. `cd ./client`
+6. Paste the vendor and token contract addresses to a `.env` file in the `client` folder as in `.env.example` (ignore commented fields)
+7. Start buying and selling PASTEL:
+   ```shell
+   deno run --allow-read --allow-env --allow-net exchanger.ts buy 100
+   deno run --allow-read --allow-env --allow-net exchanger.ts sell 50
+   ```
